@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Expense - Finance Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold text-center text-red-800">Add New Expense</h1>
+            <nav class="flex justify-center space-x-4 mt-4">
+                <a href="/" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Dashboard</a>
+                <a href="/add-expense.html" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">Add Expense</a>
+                <a href="/add-income.html" class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">Add Income</a>
+                <a href="/report.html" class="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600">Reports</a>
+            </nav>
+        </header>
+
+        <main class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
+            <form id="expenseForm" class="space-y-4">
+                <div class="form-group">
+                    <label for="head_id" class="form-label">Expense Head</label>
+                    <select id="head_id" name="head_id" class="form-input" required>
+                        <option value="">Select Expense Head</option>
+                        <!-- Options will be populated by JavaScript -->
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="amount" class="form-label">Amount</label>
+                    <input type="number" id="amount" name="amount" step="0.01" min="0" 
+                           class="form-input" placeholder="0.00" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="date" class="form-label">Date</label>
+                    <input type="date" id="date" name="date" class="form-input" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="description" class="form-label">Description</label>
+                    <textarea id="description" name="description" rows="3" 
+                              class="form-input" placeholder="Optional notes"></textarea>
+                </div>
+
+                <div class="flex justify-between">
+                    <button type="button" onclick="window.location.href='/'" 
+                            class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">
+                        Cancel
+                    </button>
+                    <button type="submit" 
+                            class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
+                        Save Expense
+                    </button>
+                </div>
+            </form>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set default date to today
+            document.getElementById('date').valueAsDate = new Date();
+            
+            // Load expense heads
+            fetch('/api/expenses/heads')
+                .then(response => response.json())
+                .then(heads => {
+                    const select = document.getElementById('head_id');
+                    heads.forEach(head => {
+                        const option = document.createElement('option');
+                        option.value = head.id;
+                        option.textContent = head.name;
+                        select.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Error loading expense heads:', error));
+
+            // Handle form submission
+            document.getElementById('expenseForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const formData = {
+                    head_id: document.getElementById('head_id').value,
+                    amount: parseFloat(document.getElementById('amount').value),
+                    date: document.getElementById('date').value,
+                    description: document.getElementById('description').value
+                };
+
+                fetch('/api/expenses/entries', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error('Failed to save expense');
+                    return response.json();
+                })
+                .then(data => {
+                    alert('Expense saved successfully!');
+                    window.location.href = '/';
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to save expense: ' + error.message);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
